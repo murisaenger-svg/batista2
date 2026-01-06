@@ -9,68 +9,45 @@ body{
   background:black;
   overflow:hidden;
 }
-
 #world{
   position:absolute;
   width:1200px;
   height:1200px;
 }
-
 .player{
   width:40px;
   height:40px;
   background:lime;
   position:absolute;
 }
-
 .enemy{
   width:40px;
   height:40px;
   background:red;
   position:absolute;
 }
-
 .door{
   width:50px;
   height:80px;
   background:blue;
   position:absolute;
 }
-
 .key{
   width:30px;
   height:30px;
   background:yellow;
   position:absolute;
 }
-
+.wall{
+  position:absolute;
+  background:#444;
+}
 #info{
   position:fixed;
   top:10px;
   left:10px;
   color:white;
 }
-
-#arrow{
-  position:fixed;
-  top:40px;
-  left:10px;
-  width:0;
-  height:0;
-  border-top:10px solid transparent;
-  border-bottom:10px solid transparent;
-  border-left:20px solid white;
-  transform-origin:50% 50%;
-}
-
-#darkness{
-  position:fixed;
-  inset:0;
-  background:black;
-  pointer-events:none;
-  mix-blend-mode:multiply;
-}
-
 #retry{
   display:none;
   position:fixed;
@@ -84,14 +61,17 @@ body{
 <body>
 
 <div id="info">chave nao</div>
-<div id="arrow"></div>
-<div id="darkness"></div>
 
 <div id="world">
   <div class="player" id="player"></div>
   <div class="enemy" id="enemy"></div>
   <div class="door" id="door"></div>
   <div class="key" id="key"></div>
+
+  <div class="wall" style="left:200px;top:0;width:40px;height:500px"></div>
+  <div class="wall" style="left:400px;top:300px;width:40px;height:500px"></div>
+  <div class="wall" style="left:0;top:600px;width:600px;height:40px"></div>
+  <div class="wall" style="left:700px;top:200px;width:400px;height:40px"></div>
 </div>
 
 <button id="retry">tente novamente</button>
@@ -104,23 +84,22 @@ const door=document.getElementById("door")
 const key=document.getElementById("key")
 const retry=document.getElementById("retry")
 const info=document.getElementById("info")
-const arrow=document.getElementById("arrow")
-const darkness=document.getElementById("darkness")
+const walls=[...document.querySelectorAll(".wall")]
 
-let px=100,py=100
-let ex=500,ey=500
+let px=60,py=60
+let ex=600,ey=600
 let vx=0,vy=0
 let hasKey=false
 let gameOver=false
 
 const speed=4
-const enemySpeed=2.3
+const enemySpeed=2
 const keys={}
 
-door.style.left="800px"
-door.style.top="600px"
-key.style.left="300px"
-key.style.top="200px"
+door.style.left="1000px"
+door.style.top="900px"
+key.style.left="150px"
+key.style.top="400px"
 
 document.addEventListener("keydown",e=>keys[e.key]=true)
 document.addEventListener("keyup",e=>keys[e.key]=false)
@@ -134,6 +113,19 @@ function colisao(a,b){
   )
 }
 
+function bateParede(x,y,w,h){
+  for(let wall of walls){
+    const b={
+      x:wall.offsetLeft,
+      y:wall.offsetTop,
+      w:wall.offsetWidth,
+      h:wall.offsetHeight
+    }
+    if(colisao({x,y,w,h},b)) return true
+  }
+  return false
+}
+
 function loop(){
   if(gameOver) return
 
@@ -144,48 +136,24 @@ function loop(){
   if(keys["a"]) vx=-speed
   if(keys["d"]) vx=speed
 
-  px+=vx
-  py+=vy
+  let nx=px+vx
+  let ny=py+vy
 
-  let tx=px+vx*8
-  let ty=py+vy*8
+  if(!bateParede(nx,py,40,40)) px=nx
+  if(!bateParede(px,ny,40,40)) py=ny
 
-  if(ex<tx) ex+=enemySpeed
-  if(ex>tx) ex-=enemySpeed
-  if(ey<ty) ey+=enemySpeed
-  if(ey>ty) ey-=enemySpeed
+  if(ex<px && !bateParede(ex+enemySpeed,ey,40,40)) ex+=enemySpeed
+  if(ex>px && !bateParede(ex-enemySpeed,ey,40,40)) ex-=enemySpeed
+  if(ey<py && !bateParede(ex,ey+enemySpeed,40,40)) ey+=enemySpeed
+  if(ey>py && !bateParede(ex,ey-enemySpeed,40,40)) ey-=enemySpeed
 
   player.style.left=px+"px"
   player.style.top=py+"px"
   enemy.style.left=ex+"px"
   enemy.style.top=ey+"px"
 
-  let camX=-(px-400)
-  let camY=-(py-300)
-
-  let dx=ex-px
-  let dy=ey-py
-  let dist=Math.sqrt(dx*dx+dy*dy)
-
-  if(dist<200){
-    camX+=Math.random()*8-4
-    camY+=Math.random()*8-4
-  }
-
-  world.style.left=camX+"px"
-  world.style.top=camY+"px"
-
-  let ax=door.offsetLeft-px
-  let ay=door.offsetTop-py
-  let ang=Math.atan2(ay,ax)*180/Math.PI
-  arrow.style.transform="rotate("+ang+"deg)"
-
-  darkness.style.background=
-    "radial-gradient(circle at "+
-    (px-camX)+"px "+
-    (py-camY)+"px,"+
-    " transparent 90px,"+
-    " rgba(0,0,0,0.98) 160px)"
+  world.style.left=-(px-400)+"px"
+  world.style.top=-(py-300)+"px"
 
   const p={x:px,y:py,w:40,h:40}
   const e={x:ex,y:ey,w:40,h:40}
@@ -215,10 +183,10 @@ function loop(){
 }
 
 retry.onclick=()=>location.reload()
-
 loop()
 </script>
 
 </body>
 </html>
+
 
