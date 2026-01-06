@@ -48,7 +48,17 @@ body{
   position:fixed;
   top:40px;
   left:10px;
-  color:white;
+  width:0;
+  height:0;
+  border-top:10px solid transparent;
+  border-bottom:10px solid transparent;
+  border-left:20px solid white;
+  transform-origin:50% 50%;
+}
+#darkness{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
 }
 #retry{
   display:none;
@@ -63,7 +73,8 @@ body{
 <body>
 
 <div id="info">chave nao</div>
-<div id="arrow">porta →</div>
+<div id="arrow"></div>
+<div id="darkness"></div>
 
 <div id="world">
   <div class="player" id="player"></div>
@@ -83,6 +94,7 @@ const key=document.getElementById("key")
 const retry=document.getElementById("retry")
 const info=document.getElementById("info")
 const arrow=document.getElementById("arrow")
+const darkness=document.getElementById("darkness")
 
 let px=100,py=100
 let ex=500,ey=500
@@ -152,8 +164,17 @@ function loop(){
   world.style.left=camX+"px"
   world.style.top=camY+"px"
 
-  if(px < door.offsetLeft) arrow.innerText="porta →"
-  else arrow.innerText="porta ←"
+  let ax=door.offsetLeft-px
+  let ay=door.offsetTop-py
+  let ang=Math.atan2(ay,ax)*180/Math.PI
+  arrow.style.transform="rotate("+ang+"deg)"
+
+  darkness.style.background=
+    "radial-gradient(circle at "+
+    (px-camX)+"px "+
+    (py-camY)+"px,"+
+    " transparent 120px,"+
+    " rgba(0,0,0,0.95) 260px)"
 
   const p={x:px,y:py,w:40,h:40}
   const e={x:ex,y:ey,w:40,h:40}
