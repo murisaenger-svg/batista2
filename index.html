@@ -1,110 +1,180 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>fuga</title>
-  <style>
-    body {
-      margin: 0;
-      background: black;
-      overflow: hidden;
-    }
-    .player {
-      width: 40px;
-      height: 40px;
-      background: lime;
-      position: absolute;
-    }
-    .enemy {
-      width: 40px;
-      height: 40px;
-      background: red;
-      position: absolute;
-    }
-    .door {
-      width: 50px;
-      height: 80px;
-      background: blue;
-      position: absolute;
-      right: 20px;
-      bottom: 20px;
-    }
-  </style>
+<meta charset="utf-8">
+<title>fuga</title>
+<style>
+body{
+  margin:0;
+  background:black;
+  overflow:hidden;
+}
+#world{
+  position:absolute;
+  width:2000px;
+  height:2000px;
+}
+.player{
+  width:40px;
+  height:40px;
+  background:lime;
+  position:absolute;
+}
+.enemy{
+  width:40px;
+  height:40px;
+  background:red;
+  position:absolute;
+}
+.door{
+  width:50px;
+  height:80px;
+  background:blue;
+  position:absolute;
+}
+.key{
+  width:30px;
+  height:30px;
+  background:yellow;
+  position:absolute;
+}
+#info{
+  position:fixed;
+  top:10px;
+  left:10px;
+  color:white;
+  font-family:arial;
+}
+#retry{
+  display:none;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  padding:20px;
+  font-size:20px;
+}
+</style>
 </head>
 <body>
 
-<div class="player" id="player"></div>
-<div class="enemy" id="enemy"></div>
-<div class="door" id="door"></div>
+<div id="info">chave nao</div>
+<div id="world">
+  <div class="player" id="player"></div>
+  <div class="enemy" id="enemy"></div>
+  <div class="door" id="door"></div>
+  <div class="key" id="key"></div>
+</div>
+<button id="retry">tente novamente</button>
 
 <script>
-  const player = document.getElementById("player")
-  const enemy = document.getElementById("enemy")
-  const door = document.getElementById("door")
+const world=document.getElementById("world")
+const player=document.getElementById("player")
+const enemy=document.getElementById("enemy")
+const door=document.getElementById("door")
+const key=document.getElementById("key")
+const retry=document.getElementById("retry")
+const info=document.getElementById("info")
 
-  let px = 50
-  let py = 50
+let px py ex ey
+let vx=0 vy=0
+let hasKey=false
+let gameOver=false
 
-  let ex = 400
-  let ey = 200
+const speed=4
+const enemySpeed=2.5
+const keys={}
 
-  const speed = 5
-  const enemySpeed = 2
-
-  const keys = {}
-
-  document.addEventListener("keydown", e => keys[e.key] = true)
-  document.addEventListener("keyup", e => keys[e.key] = false)
-
-  function colisao(a,b){
-    return (
-      a.x < b.x + b.w &&
-      a.x + a.w > b.x &&
-      a.y < b.y + b.h &&
-      a.y + a.h > b.y
-    )
-  }
-
-  function loop(){
-    if(keys["w"]) py -= speed
-    if(keys["s"]) py += speed
-    if(keys["a"]) px -= speed
-    if(keys["d"]) px += speed
-
-    if(ex < px) ex += enemySpeed
-    if(ex > px) ex -= enemySpeed
-    if(ey < py) ey += enemySpeed
-    if(ey > py) ey -= enemySpeed
-
-    player.style.left = px + "px"
-    player.style.top = py + "px"
-
-    enemy.style.left = ex + "px"
-    enemy.style.top = ey + "px"
-
-    const p = {x:px,y:py,w:40,h:40}
-    const e = {x:ex,y:ey,w:40,h:40}
-    const d = {
-      x: door.offsetLeft,
-      y: door.offsetTop,
-      w: 50,
-      h: 80
-    }
-
-    if(colisao(p,e)){
-      alert("voce morreu")
-      location.reload()
-    }
-
-    if(colisao(p,d)){
-      alert("voce venceu")
-      location.reload()
-    }
-
-    requestAnimationFrame(loop)
-  }
-
+function reset(){
+  px=100
+  py=100
+  ex=600
+  ey=600
+  door.style.left="1800px"
+  door.style.top="1800px"
+  key.style.left="1000px"
+  key.style.top="400px"
+  hasKey=false
+  info.innerText="chave nao"
+  retry.style.display="none"
+  gameOver=false
   loop()
+}
+
+document.addEventListener("keydown",e=>keys[e.key]=true)
+document.addEventListener("keyup",e=>keys[e.key]=false)
+
+function colisao(a,b){
+  return a.x<a.w+b.x&&a.x+a.w>b.x&&a.y<a.h+b.y&&a.y+a.h>b.y
+}
+
+function loop(){
+  if(gameOver)return
+
+  vx=0
+  vy=0
+  if(keys["w"])vy=-speed
+  if(keys["s"])vy=speed
+  if(keys["a"])vx=-speed
+  if(keys["d"])vx=speed
+
+  px+=vx
+  py+=vy
+
+  let targetX=px+vx*10
+  let targetY=py+vy*10
+
+  if(ex<targetX)ex+=enemySpeed
+  if(ex>targetX)ex-=enemySpeed
+  if(ey<targetY)ey+=enemySpeed
+  if(ey>targetY)ey-=enemySpeed
+
+  player.style.left=px+"px"
+  player.style.top=py+"px"
+  enemy.style.left=ex+"px"
+  enemy.style.top=ey+"px"
+
+  world.style.left=-(px-400)+"px"
+  world.style.top=-(py-300)+"px"
+
+  let dx=ex-px
+  let dy=ey-py
+  let dist=Math.sqrt(dx*dx+dy*dy)
+  if(dist<200){
+    world.style.left=parseFloat(world.style.left)+(Math.random()*10-5)+"px"
+    world.style.top=parseFloat(world.style.top)+(Math.random()*10-5)+"px"
+  }
+
+  const p={x:px,y:py,w:40,h:40}
+  const e={x:ex,y:ey,w:40,h:40}
+  const d={x:door.offsetLeft,y:door.offsetTop,w:50,h:80}
+  const k={x:key.offsetLeft,y:key.offsetTop,w:30,h:30}
+
+  if(!hasKey&&colisao(p,k)){
+    hasKey=true
+    key.style.display="none"
+    info.innerText="chave sim"
+  }
+
+  if(colisao(p,e)){
+    gameOver=true
+    retry.style.display="block"
+    return
+  }
+
+  if(colisao(p,d)&&hasKey){
+    gameOver=true
+    retry.innerText="venceu jogar dnv"
+    retry.style.display="block"
+    return
+  }
+
+  requestAnimationFrame(loop)
+}
+
+retry.onclick=()=>location.reload()
+
+reset()
 </script>
 
 </body>
