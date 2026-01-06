@@ -2,56 +2,111 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>click game</title>
+  <title>fuga</title>
   <style>
     body {
       margin: 0;
       background: black;
-      color: white;
-      font-family: arial;
       overflow: hidden;
     }
-    #score {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      font-size: 20px;
+    .player {
+      width: 40px;
+      height: 40px;
+      background: lime;
+      position: absolute;
     }
-    #box {
-      width: 50px;
-      height: 50px;
+    .enemy {
+      width: 40px;
+      height: 40px;
       background: red;
       position: absolute;
-      cursor: pointer;
+    }
+    .door {
+      width: 50px;
+      height: 80px;
+      background: blue;
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
     }
   </style>
 </head>
 <body>
 
-<div id="score">pontos 0</div>
-<div id="box"></div>
+<div class="player" id="player"></div>
+<div class="enemy" id="enemy"></div>
+<div class="door" id="door"></div>
 
 <script>
-  const box = document.getElementById("box")
-  const scoreText = document.getElementById("score")
+  const player = document.getElementById("player")
+  const enemy = document.getElementById("enemy")
+  const door = document.getElementById("door")
 
-  let pontos = 0
+  let px = 50
+  let py = 50
 
-  function moverBox(){
-    const x = Math.random() * (window.innerWidth - 50)
-    const y = Math.random() * (window.innerHeight - 50)
-    box.style.left = x + "px"
-    box.style.top = y + "px"
+  let ex = 400
+  let ey = 200
+
+  const speed = 5
+  const enemySpeed = 2
+
+  const keys = {}
+
+  document.addEventListener("keydown", e => keys[e.key] = true)
+  document.addEventListener("keyup", e => keys[e.key] = false)
+
+  function colisao(a,b){
+    return (
+      a.x < b.x + b.w &&
+      a.x + a.w > b.x &&
+      a.y < b.y + b.h &&
+      a.y + a.h > b.y
+    )
   }
 
-  box.onclick = () => {
-    pontos += 1
-    scoreText.innerText = "pontos " + pontos
-    moverBox()
+  function loop(){
+    if(keys["w"]) py -= speed
+    if(keys["s"]) py += speed
+    if(keys["a"]) px -= speed
+    if(keys["d"]) px += speed
+
+    if(ex < px) ex += enemySpeed
+    if(ex > px) ex -= enemySpeed
+    if(ey < py) ey += enemySpeed
+    if(ey > py) ey -= enemySpeed
+
+    player.style.left = px + "px"
+    player.style.top = py + "px"
+
+    enemy.style.left = ex + "px"
+    enemy.style.top = ey + "px"
+
+    const p = {x:px,y:py,w:40,h:40}
+    const e = {x:ex,y:ey,w:40,h:40}
+    const d = {
+      x: door.offsetLeft,
+      y: door.offsetTop,
+      w: 50,
+      h: 80
+    }
+
+    if(colisao(p,e)){
+      alert("voce morreu")
+      location.reload()
+    }
+
+    if(colisao(p,d)){
+      alert("voce venceu")
+      location.reload()
+    }
+
+    requestAnimationFrame(loop)
   }
 
-  moverBox()
+  loop()
 </script>
 
 </body>
 </html>
+
