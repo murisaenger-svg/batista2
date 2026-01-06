@@ -142,10 +142,37 @@ function loop(){
   if(!bateParede(nx,py,40,40)) px=nx
   if(!bateParede(px,ny,40,40)) py=ny
 
-  if(ex<px && !bateParede(ex+enemySpeed,ey,40,40)) ex+=enemySpeed
-  if(ex>px && !bateParede(ex-enemySpeed,ey,40,40)) ex-=enemySpeed
-  if(ey<py && !bateParede(ex,ey+enemySpeed,40,40)) ey+=enemySpeed
-  if(ey>py && !bateParede(ex,ey-enemySpeed,40,40)) ey-=enemySpeed
+  let enx=ex
+  let eny=ey
+
+  if(px>ex) enx+=enemySpeed
+  if(px<ex) enx-=enemySpeed
+
+  if(!bateParede(enx,ey,40,40)){
+    ex=enx
+  }else{
+    if(py>ey) eny+=enemySpeed
+    if(py<ey) eny-=enemySpeed
+    if(!bateParede(ex,eny,40,40)){
+      ey=eny
+    }
+  }
+
+  enx=ex
+  eny=ey
+
+  if(py>ey) eny+=enemySpeed
+  if(py<ey) eny-=enemySpeed
+
+  if(!bateParede(ex,eny,40,40)){
+    ey=eny
+  }else{
+    if(px>ex) enx+=enemySpeed
+    if(px<ex) enx-=enemySpeed
+    if(!bateParede(enx,ey,40,40)){
+      ex=enx
+    }
+  }
 
   player.style.left=px+"px"
   player.style.top=py+"px"
@@ -188,5 +215,6 @@ loop()
 
 </body>
 </html>
+
 
 
