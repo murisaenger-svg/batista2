@@ -30,12 +30,13 @@ body {
   position: fixed;
   top: 20px;
   left: 50%;
-  transform-origin: center;
+  z-index: 9999;
   width: 0;
   height: 0;
   border-left: 15px solid transparent;
   border-right: 15px solid transparent;
   border-bottom: 30px solid white;
+  transform-origin: center;
 }
 </style>
 </head>
@@ -123,7 +124,7 @@ function gameLoop() {
   }
 
   const angle = Math.atan2(dy - py, dx - px) * 180 / Math.PI
-  arrow.style.transform = `translateX(-50%) rotate(${angle}deg)`
+  arrow.style.transform = `translateX(-50%) rotate(${angle + 90}deg)`
 
   player.style.left = px + "px"
   player.style.top = py + "px"
@@ -137,10 +138,10 @@ function gameLoop() {
   door.style.left = dx + "px"
   door.style.top = dy + "px"
 
-  window.scrollTo(
-    px - window.innerWidth / 2 + 20,
-    py - window.innerHeight / 2 + 20
-  )
+  const camX = Math.round(px - window.innerWidth / 2 + 20)
+  const camY = Math.round(py - window.innerHeight / 2 + 20)
+
+  window.scrollTo(camX, camY)
 
   requestAnimationFrame(gameLoop)
 }
