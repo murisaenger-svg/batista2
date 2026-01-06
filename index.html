@@ -3,217 +3,222 @@
 <head>
 <meta charset="utf-8">
 <title>fuga</title>
+
 <style>
 body{
   margin:0;
   background:black;
   overflow:hidden;
 }
-#world{
-  position:absolute;
-  width:1200px;
-  height:1200px;
+
+#game{
+  position:relative;
+  width:800px;
+  height:500px;
+  margin:20px auto;
+  background:#111;
 }
+
 .player{
-  width:40px;
-  height:40px;
+  width:30px;
+  height:30px;
   background:lime;
   position:absolute;
 }
+
 .enemy{
-  width:40px;
-  height:40px;
+  width:30px;
+  height:30px;
   background:red;
   position:absolute;
 }
-.door{
-  width:50px;
-  height:80px;
-  background:blue;
-  position:absolute;
-}
-.key{
-  width:30px;
-  height:30px;
-  background:yellow;
-  position:absolute;
-}
+
 .wall{
   position:absolute;
   background:#444;
 }
-#info{
-  position:fixed;
-  top:10px;
-  left:10px;
-  color:white;
+
+.door{
+  width:40px;
+  height:60px;
+  background:blue;
+  position:absolute;
 }
-#retry{
-  display:none;
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  padding:20px;
+
+.key{
+  width:20px;
+  height:20px;
+  background:yellow;
+  position:absolute;
+}
+
+#msg{
+  color:white;
+  text-align:center;
+  font-family:arial;
 }
 </style>
 </head>
+
 <body>
 
-<div id="info">chave nao</div>
+<div id="msg"></div>
 
-<div id="world">
+<div id="game">
   <div class="player" id="player"></div>
   <div class="enemy" id="enemy"></div>
   <div class="door" id="door"></div>
   <div class="key" id="key"></div>
 
-  <div class="wall" style="left:200px;top:0;width:40px;height:500px"></div>
-  <div class="wall" style="left:400px;top:300px;width:40px;height:500px"></div>
-  <div class="wall" style="left:0;top:600px;width:600px;height:40px"></div>
-  <div class="wall" style="left:700px;top:200px;width:400px;height:40px"></div>
+  <div class="wall" style="left:200px;top:0;width:20px;height:300px"></div>
+  <div class="wall" style="left:400px;top:200px;width:20px;height:300px"></div>
+  <div class="wall" style="left:100px;top:350px;width:500px;height:20px"></div>
 </div>
 
-<button id="retry">tente novamente</button>
-
 <script>
-const world=document.getElementById("world")
 const player=document.getElementById("player")
 const enemy=document.getElementById("enemy")
 const door=document.getElementById("door")
 const key=document.getElementById("key")
-const retry=document.getElementById("retry")
-const info=document.getElementById("info")
-const walls=[...document.querySelectorAll(".wall")]
+const walls=document.querySelectorAll(".wall")
+const msg=document.getElementById("msg")
 
-let px=60,py=60
-let ex=600,ey=600
+let px=50
+let py=50
+let ex=600
+let ey=100
+
+let speed=4
+let enemySpeed=2
 let hasKey=false
-let gameOver=false
 
-const speed=4
-const enemySpeed=2.4
+door.style.left="720px"
+door.style.top="420px"
+
+key.style.left="100px"
+key.style.top="100px"
+
 const keys={}
-
-door.style.left="1000px"
-door.style.top="900px"
-key.style.left="150px"
-key.style.top="400px"
 
 document.addEventListener("keydown",e=>keys[e.key]=true)
 document.addEventListener("keyup",e=>keys[e.key]=false)
 
 function colisao(a,b){
-  return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y
+  return a.x<b.x+b.w &&
+  a.x+a.w>b.x &&
+  a.y<b.y+b.h &&
+  a.y+a.h>b.y
 }
 
 function bateParede(x,y,w,h){
   for(let wall of walls){
-    if(colisao(
-      {x,y,w,h},
-      {
-        x:wall.offsetLeft,
-        y:wall.offsetTop,
-        w:wall.offsetWidth,
-        h:wall.offsetHeight
-      }
-    )) return true
+    let r={
+      x:wall.offsetLeft,
+      y:wall.offsetTop,
+      w:wall.offsetWidth,
+      h:wall.offsetHeight
+    }
+    if(colisao({x,y,w,h},r)) return true
   }
   return false
 }
 
-function loop(){
-  if(gameOver) return
-
-  let vx=0,vy=0
-  if(keys["w"]) vy=-speed
-  if(keys["s"]) vy=speed
-  if(keys["a"]) vx=-speed
-  if(keys["d"]) vx=speed
-
-  let npx=px+vx
-  let npy=py+vy
-  if(!bateParede(npx,py,40,40)) px=npx
-  if(!bateParede(px,npy,40,40)) py=npy
-
+function moveEnemy(){
   let dx=px-ex
   let dy=py-ey
-  let dist=Math.sqrt(dx*dx+dy*dy)
+  let dist=Math.hypot(dx,dy)
+  if(dist===0) return
 
-  let dirx=dx/dist || 0
-  let diry=dy/dist || 0
+  let vx=(dx/dist)*enemySpeed
+  let vy=(dy/dist)*enemySpeed
 
-  let nex=ex+dirx*enemySpeed
-  let ney=ey
+  let options=[
+    {x:vx,y:vy},
+    {x:vx,y:0},
+    {x:0,y:vy}
+  ]
 
-  if(!bateParede(nex,ney,40,40)){
-    ex=nex
-  }else{
-    ney=ey+diry*enemySpeed
-    if(!bateParede(ex,ney,40,40)) ey=ney
+  let best=null
+  let bestDist=Infinity
+
+  for(let o of options){
+    let tx=ex+o.x
+    let ty=ey+o.y
+    if(!bateParede(tx,ty,30,30)){
+      let d=Math.hypot(px-tx,py-ty)
+      if(d<bestDist){
+        bestDist=d
+        best=o
+      }
+    }
   }
 
-  nex=ex
-  ney=ey+diry*enemySpeed
-  if(!bateParede(nex,ney,40,40)){
-    ey=ney
-  }else{
-    nex=ex+dirx*enemySpeed
-    if(!bateParede(nex,ey,40,40)) ex=nex
+  if(best){
+    ex+=best.x
+    ey+=best.y
   }
+}
+
+function loop(){
+  let nx=px
+  let ny=py
+
+  if(keys["w"]) ny-=speed
+  if(keys["s"]) ny+=speed
+  if(keys["a"]) nx-=speed
+  if(keys["d"]) nx+=speed
+
+  if(!bateParede(nx,py,30,30)) px=nx
+  if(!bateParede(px,ny,30,30)) py=ny
+
+  moveEnemy()
 
   player.style.left=px+"px"
   player.style.top=py+"px"
+
   enemy.style.left=ex+"px"
   enemy.style.top=ey+"px"
 
-  let camX=-(px-400)
-  let camY=-(py-300)
-
-  if(dist<180){
-    camX+=Math.random()*10-5
-    camY+=Math.random()*10-5
+  let p={x:px,y:py,w:30,h:30}
+  let e={x:ex,y:ey,w:30,h:30}
+  let d={
+    x:door.offsetLeft,
+    y:door.offsetTop,
+    w:40,
+    h:60
   }
-
-  world.style.left=camX+"px"
-  world.style.top=camY+"px"
-
-  const p={x:px,y:py,w:40,h:40}
-  const e={x:ex,y:ey,w:40,h:40}
-
-  if(!hasKey && colisao(p,{
+  let k={
     x:key.offsetLeft,
     y:key.offsetTop,
-    w:30,
-    h:30
-  })){
-    hasKey=true
-    key.style.display="none"
-    info.innerText="chave sim"
+    w:20,
+    h:20
   }
 
   if(colisao(p,e)){
-    gameOver=true
-    retry.style.display="block"
-    return
+    alert("voce morreu")
+    location.reload()
   }
 
-  if(hasKey && colisao(p,{
-    x:door.offsetLeft,
-    y:door.offsetTop,
-    w:50,
-    h:80
-  })){
-    gameOver=true
-    retry.innerText="venceu jogar dnv"
-    retry.style.display="block"
-    return
+  if(colisao(p,k)){
+    hasKey=true
+    key.style.display="none"
+    msg.innerText="voce pegou a chave"
+    setTimeout(()=>msg.innerText="",2000)
+  }
+
+  if(colisao(p,d)){
+    if(hasKey){
+      alert("voce venceu")
+      location.reload()
+    }else{
+      msg.innerText="voce nao possui a chave"
+      setTimeout(()=>msg.innerText="",1500)
+    }
   }
 
   requestAnimationFrame(loop)
 }
 
-retry.onclick=()=>location.reload()
 loop()
 </script>
 
