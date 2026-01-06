@@ -25,9 +25,23 @@ body {
 #enemy { background: red; }
 #key { background: yellow; }
 #door { background: green; }
+
+#arrow {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform-origin: center;
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-bottom: 30px solid white;
+}
 </style>
 </head>
 <body>
+
+<div id="arrow"></div>
 
 <div id="world">
   <div id="player" class="entity"></div>
@@ -41,6 +55,7 @@ const player = document.getElementById("player")
 const enemy = document.getElementById("enemy")
 const keyItem = document.getElementById("key")
 const door = document.getElementById("door")
+const arrow = document.getElementById("arrow")
 
 let px = 100
 let py = 100
@@ -48,19 +63,28 @@ let py = 100
 let ex = 500
 let ey = 500
 
-let kx = 300
-let ky = 300
-
 let dx = 1700
 let dy = 1700
 
-let speed = 6
-let enemySpeed = 3
+let kx
+let ky
+
+const speed = 6
+const enemySpeed = 3
 
 let hasKey = false
 let alive = true
 
 const keys = {}
+
+function randomKeyPos() {
+  do {
+    kx = Math.random() * 1800
+    ky = Math.random() * 1800
+  } while (Math.hypot(kx - px, ky - py) < 300)
+}
+
+randomKeyPos()
 
 document.addEventListener("keydown", e => {
   keys[e.key.toLowerCase()] = true
@@ -69,10 +93,6 @@ document.addEventListener("keydown", e => {
 document.addEventListener("keyup", e => {
   keys[e.key.toLowerCase()] = false
 })
-
-function colide(a,bx,by) {
-  return Math.abs(a.x - bx) < 40 && Math.abs(a.y - by) < 40
-}
 
 function gameLoop() {
   if (!alive) return
@@ -101,6 +121,9 @@ function gameLoop() {
     alert("voce morreu")
     alive = false
   }
+
+  const angle = Math.atan2(dy - py, dx - px) * 180 / Math.PI
+  arrow.style.transform = `translateX(-50%) rotate(${angle}deg)`
 
   player.style.left = px + "px"
   player.style.top = py + "px"
