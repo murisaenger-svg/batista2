@@ -1,7 +1,71 @@
 <!DOCTYPE html>
 <html>
+<head>
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+}
 
-  <head>
+#world {
+  position: relative;
+  width: 2000px;
+  height: 2000px;
+  background: #222;
+}
 
-    <title>fuja do batista</title>
-  </head>
+#player {
+  width: 40px;
+  height: 40px;
+  background: red;
+  position: absolute;
+  left: 100px;
+  top: 100px;
+}
+</style>
+</head>
+<body>
+
+<div id="world">
+  <div id="player"></div>
+</div>
+
+<script>
+const player = document.getElementById("player")
+
+let x = 100
+let y = 100
+const speed = 8
+
+const keys = {}
+
+document.addEventListener("keydown", e => {
+  keys[e.key.toLowerCase()] = true
+})
+
+document.addEventListener("keyup", e => {
+  keys[e.key.toLowerCase()] = false
+})
+
+function gameLoop() {
+  if (keys["w"]) y -= speed
+  if (keys["s"]) y += speed
+  if (keys["a"]) x -= speed
+  if (keys["d"]) x += speed
+
+  player.style.left = x + "px"
+  player.style.top = y + "px"
+
+  window.scrollTo(
+    x - window.innerWidth / 2 + 20,
+    y - window.innerHeight / 2 + 20
+  )
+
+  requestAnimationFrame(gameLoop)
+}
+
+gameLoop()
+</script>
+
+</body>
+</html>
