@@ -9,41 +9,48 @@ body{
   background:black;
   overflow:hidden;
 }
+
 #world{
   position:absolute;
   width:1200px;
   height:1200px;
 }
+
 .player{
   width:40px;
   height:40px;
   background:lime;
   position:absolute;
 }
+
 .enemy{
   width:40px;
   height:40px;
   background:red;
   position:absolute;
 }
+
 .door{
   width:50px;
   height:80px;
   background:blue;
   position:absolute;
 }
+
 .key{
   width:30px;
   height:30px;
   background:yellow;
   position:absolute;
 }
+
 #info{
   position:fixed;
   top:10px;
   left:10px;
   color:white;
 }
+
 #arrow{
   position:fixed;
   top:40px;
@@ -55,11 +62,15 @@ body{
   border-left:20px solid white;
   transform-origin:50% 50%;
 }
+
 #darkness{
   position:fixed;
   inset:0;
+  background:black;
   pointer-events:none;
+  mix-blend-mode:multiply;
 }
+
 #retry{
   display:none;
   position:fixed;
@@ -116,10 +127,10 @@ document.addEventListener("keyup",e=>keys[e.key]=false)
 
 function colisao(a,b){
   return(
-    a.x < b.x + b.w &&
-    a.x + a.w > b.x &&
-    a.y < b.y + b.h &&
-    a.y + a.h > b.y
+    a.x<b.x+b.w &&
+    a.x+a.w>b.x &&
+    a.y<b.y+b.h &&
+    a.y+a.h>b.y
   )
 }
 
@@ -136,13 +147,13 @@ function loop(){
   px+=vx
   py+=vy
 
-  let targetX=px+vx*8
-  let targetY=py+vy*8
+  let tx=px+vx*8
+  let ty=py+vy*8
 
-  if(ex<targetX) ex+=enemySpeed
-  if(ex>targetX) ex-=enemySpeed
-  if(ey<targetY) ey+=enemySpeed
-  if(ey>targetY) ey-=enemySpeed
+  if(ex<tx) ex+=enemySpeed
+  if(ex>tx) ex-=enemySpeed
+  if(ey<ty) ey+=enemySpeed
+  if(ey>ty) ey-=enemySpeed
 
   player.style.left=px+"px"
   player.style.top=py+"px"
@@ -157,8 +168,8 @@ function loop(){
   let dist=Math.sqrt(dx*dx+dy*dy)
 
   if(dist<200){
-    camX+=Math.random()*10-5
-    camY+=Math.random()*10-5
+    camX+=Math.random()*8-4
+    camY+=Math.random()*8-4
   }
 
   world.style.left=camX+"px"
@@ -173,8 +184,8 @@ function loop(){
     "radial-gradient(circle at "+
     (px-camX)+"px "+
     (py-camY)+"px,"+
-    " transparent 120px,"+
-    " rgba(0,0,0,0.95) 260px)"
+    " transparent 90px,"+
+    " rgba(0,0,0,0.98) 160px)"
 
   const p={x:px,y:py,w:40,h:40}
   const e={x:ex,y:ey,w:40,h:40}
@@ -210,3 +221,4 @@ loop()
 
 </body>
 </html>
+
