@@ -11,8 +11,8 @@ body{
 }
 #world{
   position:absolute;
-  width:2000px;
-  height:2000px;
+  width:1200px;
+  height:1200px;
 }
 .player{
   width:40px;
@@ -44,6 +44,12 @@ body{
   left:10px;
   color:white;
 }
+#arrow{
+  position:fixed;
+  top:40px;
+  left:10px;
+  color:white;
+}
 #retry{
   display:none;
   position:fixed;
@@ -57,6 +63,7 @@ body{
 <body>
 
 <div id="info">chave nao</div>
+<div id="arrow">porta →</div>
 
 <div id="world">
   <div class="player" id="player"></div>
@@ -75,21 +82,22 @@ const door=document.getElementById("door")
 const key=document.getElementById("key")
 const retry=document.getElementById("retry")
 const info=document.getElementById("info")
+const arrow=document.getElementById("arrow")
 
 let px=100,py=100
-let ex=600,ey=600
+let ex=500,ey=500
 let vx=0,vy=0
 let hasKey=false
 let gameOver=false
 
 const speed=4
-const enemySpeed=2.5
+const enemySpeed=2.3
 const keys={}
 
-door.style.left="1800px"
-door.style.top="1800px"
-key.style.left="900px"
-key.style.top="300px"
+door.style.left="800px"
+door.style.top="600px"
+key.style.left="300px"
+key.style.top="200px"
 
 document.addEventListener("keydown",e=>keys[e.key]=true)
 document.addEventListener("keyup",e=>keys[e.key]=false)
@@ -144,6 +152,9 @@ function loop(){
   world.style.left=camX+"px"
   world.style.top=camY+"px"
 
+  if(px < door.offsetLeft) arrow.innerText="porta →"
+  else arrow.innerText="porta ←"
+
   const p={x:px,y:py,w:40,h:40}
   const e={x:ex,y:ey,w:40,h:40}
   const d={x:door.offsetLeft,y:door.offsetTop,w:50,h:80}
@@ -178,5 +189,3 @@ loop()
 
 </body>
 </html>
-
-
