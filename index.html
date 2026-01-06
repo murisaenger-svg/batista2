@@ -43,7 +43,6 @@ body{
   top:10px;
   left:10px;
   color:white;
-  font-family:arial;
 }
 #retry{
   display:none;
@@ -52,19 +51,20 @@ body{
   left:50%;
   transform:translate(-50%,-50%);
   padding:20px;
-  font-size:20px;
 }
 </style>
 </head>
 <body>
 
 <div id="info">chave nao</div>
+
 <div id="world">
   <div class="player" id="player"></div>
   <div class="enemy" id="enemy"></div>
   <div class="door" id="door"></div>
   <div class="key" id="key"></div>
 </div>
+
 <button id="retry">tente novamente</button>
 
 <script>
@@ -76,8 +76,9 @@ const key=document.getElementById("key")
 const retry=document.getElementById("retry")
 const info=document.getElementById("info")
 
-let px py ex ey
-let vx=0 vy=0
+let px=100,py=100
+let ex=600,ey=600
+let vx=0,vy=0
 let hasKey=false
 let gameOver=false
 
@@ -85,72 +86,70 @@ const speed=4
 const enemySpeed=2.5
 const keys={}
 
-function reset(){
-  px=100
-  py=100
-  ex=600
-  ey=600
-  door.style.left="1800px"
-  door.style.top="1800px"
-  key.style.left="1000px"
-  key.style.top="400px"
-  hasKey=false
-  info.innerText="chave nao"
-  retry.style.display="none"
-  gameOver=false
-  loop()
-}
+door.style.left="1800px"
+door.style.top="1800px"
+key.style.left="900px"
+key.style.top="300px"
 
 document.addEventListener("keydown",e=>keys[e.key]=true)
 document.addEventListener("keyup",e=>keys[e.key]=false)
 
 function colisao(a,b){
-  return a.x<a.w+b.x&&a.x+a.w>b.x&&a.y<a.h+b.y&&a.y+a.h>b.y
+  return(
+    a.x < b.x + b.w &&
+    a.x + a.w > b.x &&
+    a.y < b.y + b.h &&
+    a.y + a.h > b.y
+  )
 }
 
 function loop(){
-  if(gameOver)return
+  if(gameOver) return
 
   vx=0
   vy=0
-  if(keys["w"])vy=-speed
-  if(keys["s"])vy=speed
-  if(keys["a"])vx=-speed
-  if(keys["d"])vx=speed
+  if(keys["w"]) vy=-speed
+  if(keys["s"]) vy=speed
+  if(keys["a"]) vx=-speed
+  if(keys["d"]) vx=speed
 
   px+=vx
   py+=vy
 
-  let targetX=px+vx*10
-  let targetY=py+vy*10
+  let targetX=px+vx*8
+  let targetY=py+vy*8
 
-  if(ex<targetX)ex+=enemySpeed
-  if(ex>targetX)ex-=enemySpeed
-  if(ey<targetY)ey+=enemySpeed
-  if(ey>targetY)ey-=enemySpeed
+  if(ex<targetX) ex+=enemySpeed
+  if(ex>targetX) ex-=enemySpeed
+  if(ey<targetY) ey+=enemySpeed
+  if(ey>targetY) ey-=enemySpeed
 
   player.style.left=px+"px"
   player.style.top=py+"px"
   enemy.style.left=ex+"px"
   enemy.style.top=ey+"px"
 
-  world.style.left=-(px-400)+"px"
-  world.style.top=-(py-300)+"px"
+  let camX=-(px-400)
+  let camY=-(py-300)
 
   let dx=ex-px
   let dy=ey-py
   let dist=Math.sqrt(dx*dx+dy*dy)
+
   if(dist<200){
-    world.style.left=parseFloat(world.style.left)+(Math.random()*10-5)+"px"
-    world.style.top=parseFloat(world.style.top)+(Math.random()*10-5)+"px"
+    camX+=Math.random()*10-5
+    camY+=Math.random()*10-5
   }
+
+  world.style.left=camX+"px"
+  world.style.top=camY+"px"
 
   const p={x:px,y:py,w:40,h:40}
   const e={x:ex,y:ey,w:40,h:40}
   const d={x:door.offsetLeft,y:door.offsetTop,w:50,h:80}
   const k={x:key.offsetLeft,y:key.offsetTop,w:30,h:30}
 
-  if(!hasKey&&colisao(p,k)){
+  if(!hasKey && colisao(p,k)){
     hasKey=true
     key.style.display="none"
     info.innerText="chave sim"
@@ -162,7 +161,7 @@ function loop(){
     return
   }
 
-  if(colisao(p,d)&&hasKey){
+  if(colisao(p,d) && hasKey){
     gameOver=true
     retry.innerText="venceu jogar dnv"
     retry.style.display="block"
@@ -174,9 +173,10 @@ function loop(){
 
 retry.onclick=()=>location.reload()
 
-reset()
+loop()
 </script>
 
 </body>
 </html>
+
 
