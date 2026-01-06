@@ -5,37 +5,60 @@
 body {
   margin: 0;
   overflow: hidden;
+  background: #000;
 }
 
 #world {
   position: relative;
   width: 2000px;
   height: 2000px;
-  background: #222;
+  background: #111;
 }
 
-#player {
+.entity {
+  position: absolute;
   width: 40px;
   height: 40px;
-  background: red;
-  position: absolute;
-  left: 100px;
-  top: 100px;
 }
+
+#player { background: blue; }
+#enemy { background: red; }
+#key { background: yellow; }
+#door { background: green; }
 </style>
 </head>
 <body>
 
 <div id="world">
-  <div id="player"></div>
+  <div id="player" class="entity"></div>
+  <div id="enemy" class="entity"></div>
+  <div id="key" class="entity"></div>
+  <div id="door" class="entity"></div>
 </div>
 
 <script>
 const player = document.getElementById("player")
+const enemy = document.getElementById("enemy")
+const keyItem = document.getElementById("key")
+const door = document.getElementById("door")
 
-let x = 100
-let y = 100
-const speed = 8
+let px = 100
+let py = 100
+
+let ex = 500
+let ey = 500
+
+let kx = 300
+let ky = 300
+
+let dx = 1700
+let dy = 1700
+
+let speed = 6
+let enemySpeed = 3
+
+let hasKey = false
+let alive = true
 
 const keys = {}
 
@@ -47,18 +70,53 @@ document.addEventListener("keyup", e => {
   keys[e.key.toLowerCase()] = false
 })
 
-function gameLoop() {
-  if (keys["w"]) y -= speed
-  if (keys["s"]) y += speed
-  if (keys["a"]) x -= speed
-  if (keys["d"]) x += speed
+function colide(a,bx,by) {
+  return Math.abs(a.x - bx) < 40 && Math.abs(a.y - by) < 40
+}
 
-  player.style.left = x + "px"
-  player.style.top = y + "px"
+function gameLoop() {
+  if (!alive) return
+
+  if (keys["w"]) py -= speed
+  if (keys["s"]) py += speed
+  if (keys["a"]) px -= speed
+  if (keys["d"]) px += speed
+
+  if (px < ex) ex -= enemySpeed
+  if (px > ex) ex += enemySpeed
+  if (py < ey) ey -= enemySpeed
+  if (py > ey) ey += enemySpeed
+
+  if (!hasKey && Math.abs(px - kx) < 40 && Math.abs(py - ky) < 40) {
+    hasKey = true
+    keyItem.style.display = "none"
+  }
+
+  if (hasKey && Math.abs(px - dx) < 40 && Math.abs(py - dy) < 40) {
+    alert("voce venceu")
+    alive = false
+  }
+
+  if (Math.abs(px - ex) < 40 && Math.abs(py - ey) < 40) {
+    alert("voce morreu")
+    alive = false
+  }
+
+  player.style.left = px + "px"
+  player.style.top = py + "px"
+
+  enemy.style.left = ex + "px"
+  enemy.style.top = ey + "px"
+
+  keyItem.style.left = kx + "px"
+  keyItem.style.top = ky + "px"
+
+  door.style.left = dx + "px"
+  door.style.top = dy + "px"
 
   window.scrollTo(
-    x - window.innerWidth / 2 + 20,
-    y - window.innerHeight / 2 + 20
+    px - window.innerWidth / 2 + 20,
+    py - window.innerHeight / 2 + 20
   )
 
   requestAnimationFrame(gameLoop)
