@@ -1,77 +1,67 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
+<title>jogo</title>
 <style>
-body {
-  margin: 0;
-  overflow: hidden;
-  background: black;
+body{
+  margin:0;
+  overflow:hidden;
+  background:black;
 }
-
-#camera {
-  position: fixed;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+#camera{
+  position:fixed;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
 }
-
-#world {
-  position: absolute;
-  width: 1200px;
-  height: 1200px;
-  background: #111;
+#world{
+  position:absolute;
+  width:1200px;
+  height:1200px;
+  background:#111;
 }
-
-.wall {
-  position: absolute;
-  background: #555;
+.entity{
+  position:absolute;
+  width:40px;
+  height:40px;
 }
-
-.entity {
-  position: absolute;
-  width: 40px;
-  height: 40px;
+#player{background:blue}
+#enemy{background:red}
+#key{background:yellow}
+#door{background:green}
+.wall{
+  position:absolute;
+  background:#555;
 }
-
-#player { background: blue; }
-#enemy { background: red; }
-#key { background: yellow; }
-#door { background: green; }
-
-#arrow {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  z-index: 9999;
-  width: 0;
-  height: 0;
-  border-left: 15px solid transparent;
-  border-right: 15px solid transparent;
-  border-bottom: 30px solid white;
-  transform-origin: center;
+#arrow{
+  position:fixed;
+  top:20px;
+  left:50%;
+  width:0;
+  height:0;
+  border-left:15px solid transparent;
+  border-right:15px solid transparent;
+  border-bottom:30px solid white;
+  transform:translateX(-50%);
+  z-index:10;
 }
-
-#fog {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 5000;
-  background: radial-gradient(
-    circle 140px at center,
-    transparent 0%,
-    rgba(0,0,0,0.95) 70%
-  );
+#darkness{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:9;
 }
 </style>
 </head>
+
 <body>
 
+<canvas id="darkness"></canvas>
 <div id="arrow"></div>
-<div id="fog"></div>
 
 <div id="camera">
   <div id="world">
-
     <div id="player" class="entity"></div>
     <div id="enemy" class="entity"></div>
     <div id="key" class="entity"></div>
@@ -81,149 +71,111 @@ body {
     <div class="wall" style="bottom:0;left:0;width:1200px;height:40px"></div>
     <div class="wall" style="top:0;left:0;width:40px;height:1200px"></div>
     <div class="wall" style="top:0;right:0;width:40px;height:1200px"></div>
-
   </div>
 </div>
 
 <script>
-const world = document.getElementById("world")
-const player = document.getElementById("player")
-const enemy = document.getElementById("enemy")
-const keyItem = document.getElementById("key")
-const door = document.getElementById("door")
-const arrow = document.getElementById("arrow")
-const fog = document.getElementById("fog")
+const world=document.getElementById("world")
+const player=document.getElementById("player")
+const enemy=document.getElementById("enemy")
+const keyItem=document.getElementById("key")
+const door=document.getElementById("door")
+const arrow=document.getElementById("arrow")
 
-const worldSize = 1200
-const wallSize = 40
+const canvas=document.getElementById("darkness")
+const ctx=canvas.getContext("2d")
 
-let px = 100
-let py = 100
-let ex = 600
-let ey = 600
-let dx = 1050
-let dy = 1050
-let kx
-let ky
-
-const speed = 6
-const enemySpeed = 2.5
-
-let hasKey = false
-let alive = true
-const keys = {}
-
-const audioCtx = new AudioContext()
-const osc = audioCtx.createOscillator()
-const gain = audioCtx.createGain()
-const filter = audioCtx.createBiquadFilter()
-
-osc.type = "sine"
-osc.frequency.value = 60
-filter.type = "lowpass"
-filter.frequency.value = 120
-gain.gain.value = 0
-
-osc.connect(filter)
-filter.connect(gain)
-gain.connect(audioCtx.destination)
-osc.start()
-
-function randomKeyPos() {
-  do {
-    kx = Math.random() * (worldSize - 200) + 100
-    ky = Math.random() * (worldSize - 200) + 100
-  } while (Math.hypot(kx - px, ky - py) < 300)
+canvas.width=innerWidth
+canvas.height=innerHeight
+window.onresize=()=>{
+  canvas.width=innerWidth
+  canvas.height=innerHeight
 }
-randomKeyPos()
 
-document.addEventListener("keydown", e => {
-  keys[e.key.toLowerCase()] = true
-  audioCtx.resume()
-})
+const worldSize=1200
+const wall=40
 
-document.addEventListener("keyup", e => {
-  keys[e.key.toLowerCase()] = false
-})
+let px=100
+let py=100
+let ex=600
+let ey=600
+let dx=1050
+let dy=1050
+let kx=300
+let ky=900
 
-function clamp(v,min,max) {
+const keys={}
+document.addEventListener("keydown",e=>keys[e.key]=true)
+document.addEventListener("keyup",e=>keys[e.key]=false)
+
+function clamp(v,min,max){
   return Math.max(min,Math.min(max,v))
 }
 
-function gameLoop() {
-  if (!alive) return
+function drawDarkness(){
+  ctx.clearRect(0,0,canvas.width,canvas.height)
+  ctx.fillStyle="rgba(0,0,0,0.95)"
+  ctx.fillRect(0,0,canvas.width,canvas.height)
 
-  let nx = px
-  let ny = py
-
-  if (keys["w"]) ny -= speed
-  if (keys["s"]) ny += speed
-  if (keys["a"]) nx -= speed
-  if (keys["d"]) nx += speed
-
-  px = clamp(nx,wallSize,worldSize - wallSize - 40)
-  py = clamp(ny,wallSize,worldSize - wallSize - 40)
-
-  if (px < ex) ex -= enemySpeed
-  if (px > ex) ex += enemySpeed
-  if (py < ey) ey -= enemySpeed
-  if (py > ey) ey += enemySpeed
-
-  ex = clamp(ex,wallSize,worldSize - wallSize - 40)
-  ey = clamp(ey,wallSize,worldSize - wallSize - 40)
-
-  const dist = Math.hypot(px - ex, py - ey)
-  const intensity = clamp(1 - dist / 450, 0, 1)
-
-  gain.gain.value = intensity * 0.4
-  osc.frequency.value = 50 + intensity * 30
-  filter.frequency.value = 100 + intensity * 200
-
-  if (!hasKey && Math.abs(px - kx) < 40 && Math.abs(py - ky) < 40) {
-    hasKey = true
-    keyItem.style.display = "none"
-  }
-
-  if (hasKey && Math.abs(px - dx) < 40 && Math.abs(py - dy) < 40) {
-    alert("voce venceu")
-    alive = false
-  }
-
-  if (Math.abs(px - ex) < 40 && Math.abs(py - ey) < 40) {
-    alert("voce morreu")
-    alive = false
-  }
-
-  const angle = Math.atan2(dy - py, dx - px) * 180 / Math.PI
-  arrow.style.transform = `translateX(-50%) rotate(${angle + 90}deg)`
-
-  player.style.left = px + "px"
-  player.style.top = py + "px"
-  enemy.style.left = ex + "px"
-  enemy.style.top = ey + "px"
-  keyItem.style.left = kx + "px"
-  keyItem.style.top = ky + "px"
-  door.style.left = dx + "px"
-  door.style.top = dy + "px"
-
-  const camX = clamp(px - window.innerWidth / 2, 0, worldSize - window.innerWidth)
-  const camY = clamp(py - window.innerHeight / 2, 0, worldSize - window.innerHeight)
-
-  world.style.left = -camX + "px"
-  world.style.top = -camY + "px"
-
-  fog.style.background = `
-  radial-gradient(
-    circle 140px at ${window.innerWidth/2}px ${window.innerHeight/2}px,
-    transparent 0%,
-    rgba(0,0,0,0.95) 70%
-  )`
-
-  requestAnimationFrame(gameLoop)
+  ctx.globalCompositeOperation="destination-out"
+  const grad=ctx.createRadialGradient(
+    canvas.width/2,
+    canvas.height/2,
+    40,
+    canvas.width/2,
+    canvas.height/2,
+    160
+  )
+  grad.addColorStop(0,"rgba(0,0,0,1)")
+  grad.addColorStop(1,"rgba(0,0,0,0)")
+  ctx.fillStyle=grad
+  ctx.beginPath()
+  ctx.arc(canvas.width/2,canvas.height/2,160,0,Math.PI*2)
+  ctx.fill()
+  ctx.globalCompositeOperation="source-over"
 }
 
-gameLoop()
+function loop(){
+  let nx=px
+  let ny=py
+
+  if(keys["w"])ny-=6
+  if(keys["s"])ny+=6
+  if(keys["a"])nx-=6
+  if(keys["d"])nx+=6
+
+  px=clamp(nx,wall,worldSize-wall-40)
+  py=clamp(ny,wall,worldSize-wall-40)
+
+  if(px<ex)ex-=2.5
+  if(px>ex)ex+=2.5
+  if(py<ey)ey-=2.5
+  if(py>ey)ey+=2.5
+
+  const camX=clamp(px-innerWidth/2,0,worldSize-innerWidth)
+  const camY=clamp(py-innerHeight/2,0,worldSize-innerHeight)
+
+  world.style.left=-camX+"px"
+  world.style.top=-camY+"px"
+
+  player.style.left=px+"px"
+  player.style.top=py+"px"
+  enemy.style.left=ex+"px"
+  enemy.style.top=ey+"px"
+  keyItem.style.left=kx+"px"
+  keyItem.style.top=ky+"px"
+  door.style.left=dx+"px"
+  door.style.top=dy+"px"
+
+  const ang=Math.atan2(dy-py,dx-px)*180/Math.PI
+  arrow.style.transform=`translateX(-50%) rotate(${ang+90}deg)`
+
+  drawDarkness()
+  requestAnimationFrame(loop)
+}
+loop()
 </script>
 
 </body>
 </html>
+
