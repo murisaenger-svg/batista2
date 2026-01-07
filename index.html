@@ -55,7 +55,10 @@ body {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(circle at center, transparent 120px, rgba(0,0,0,0.95) 250px);
+  background: black;
+  z-index: 5000;
+  mask-image: radial-gradient(circle 140px at 50% 50%, transparent 0%, black 100%);
+  -webkit-mask-image: radial-gradient(circle 140px at 50% 50%, transparent 0%, black 100%);
 }
 </style>
 </head>
@@ -111,10 +114,16 @@ const keys = {}
 const audioCtx = new AudioContext()
 const osc = audioCtx.createOscillator()
 const gain = audioCtx.createGain()
-osc.type = "sawtooth"
+const filter = audioCtx.createLowpass()
+
+osc.type = "sine"
 osc.frequency.value = 60
+filter.frequency.value = 120
 gain.gain.value = 0
-osc.connect(gain).connect(audioCtx.destination)
+
+osc.connect(filter)
+filter.connect(gain)
+gain.connect(audioCtx.destination)
 osc.start()
 
 function randomKeyPos() {
@@ -129,6 +138,7 @@ document.addEventListener("keydown", e => {
   keys[e.key.toLowerCase()] = true
   audioCtx.resume()
 })
+
 document.addEventListener("keyup", e => {
   keys[e.key.toLowerCase()] = false
 })
@@ -159,10 +169,12 @@ function gameLoop() {
   ex = clamp(ex,wallSize,worldSize - wallSize - 40)
   ey = clamp(ey,wallSize,worldSize - wallSize - 40)
 
-  const dist = Math.hypot(px - ex,py - ey)
+  const dist = Math.hypot(px - ex, py - ey)
+  const intensity = clamp(1 - dist / 450, 0, 1)
 
-  gain.gain.value = clamp(1 - dist / 500,0,0.4)
-  osc.frequency.value = 60 + (400 - dist)
+  gain.gain.value = intensity * 0.4
+  osc.frequency.value = 50 + intensity * 30
+  filter.frequency.value = 100 + intensity * 200
 
   if (!hasKey && Math.abs(px - kx) < 40 && Math.abs(py - ky) < 40) {
     hasKey = true
@@ -179,7 +191,7 @@ function gameLoop() {
     alive = false
   }
 
-  const angle = Math.atan2(dy - py,dx - px) * 180 / Math.PI
+  const angle = Math.atan2(dy - py, dx - px) * 180 / Math.PI
   arrow.style.transform = `translateX(-50%) rotate(${angle + 90}deg)`
 
   player.style.left = px + "px"
@@ -191,18 +203,23 @@ function gameLoop() {
   door.style.left = dx + "px"
   door.style.top = dy + "px"
 
-  const shake = dist < 200 ? (200 - dist) / 20 : 0
-  const camX = clamp(px - window.innerWidth / 2,0,worldSize - window.innerWidth)
-  const camY = clamp(py - window.innerHeight / 2,0,worldSize - window.innerHeight)
+  const camX = clamp(px - window.innerWidth / 2, 0, worldSize - window.innerWidth)
+  const camY = clamp(py - window.innerHeight / 2, 0, worldSize - window.innerHeight)
 
-  world.style.left = (-camX + (Math.random() - 0.5) * shake) + "px"
-  world.style.top = (-camY + (Math.random() - 0.5) * shake) + "px"
+  world.style.left = -camX + "px"
+  world.style.top = -camY + "px"
 
-  fog.style.background = `radial-gradient(circle at ${window.innerWidth/2}px ${window.innerHeight/2}px, transparent 120px, rgba(0,0,0,0.95) 250px)`
+  fog.style.maskImage =
+  `radial-gradient(circle 140px at ${window.innerWidth/2}px ${window.innerHeight/2}px, transparent 0%, black 100%)`
+
+  fog.style.webkitMaskImage = fog.style.maskImage
 
   requestAnimationFrame(gameLoop)
 }
 
 gameLoop()
 </script>
+
+</body>
+</html>
 
