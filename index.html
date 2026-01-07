@@ -55,10 +55,12 @@ body {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: black;
   z-index: 5000;
-  mask-image: radial-gradient(circle 140px at 50% 50%, transparent 0%, black 100%);
-  -webkit-mask-image: radial-gradient(circle 140px at 50% 50%, transparent 0%, black 100%);
+  background: radial-gradient(
+    circle 140px at center,
+    transparent 0%,
+    rgba(0,0,0,0.95) 70%
+  );
 }
 </style>
 </head>
@@ -114,10 +116,11 @@ const keys = {}
 const audioCtx = new AudioContext()
 const osc = audioCtx.createOscillator()
 const gain = audioCtx.createGain()
-const filter = audioCtx.createLowpass()
+const filter = audioCtx.createBiquadFilter()
 
 osc.type = "sine"
 osc.frequency.value = 60
+filter.type = "lowpass"
 filter.frequency.value = 120
 gain.gain.value = 0
 
@@ -209,10 +212,12 @@ function gameLoop() {
   world.style.left = -camX + "px"
   world.style.top = -camY + "px"
 
-  fog.style.maskImage =
-  `radial-gradient(circle 140px at ${window.innerWidth/2}px ${window.innerHeight/2}px, transparent 0%, black 100%)`
-
-  fog.style.webkitMaskImage = fog.style.maskImage
+  fog.style.background = `
+  radial-gradient(
+    circle 140px at ${window.innerWidth/2}px ${window.innerHeight/2}px,
+    transparent 0%,
+    rgba(0,0,0,0.95) 70%
+  )`
 
   requestAnimationFrame(gameLoop)
 }
@@ -222,4 +227,3 @@ gameLoop()
 
 </body>
 </html>
-
